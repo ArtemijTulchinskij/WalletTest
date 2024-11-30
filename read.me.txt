@@ -1,0 +1,15 @@
+Для настройки локального сервера я использовал gitBash
+Commands:
+
+cd /c/Users/Ilya/Desktop/proto22
+
+pip install grpcio grpcio-tools
+
+python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. auth.proto common.proto transfer.proto
+
+python server.py
+
+
+
+
+

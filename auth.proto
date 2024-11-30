@@ -1,0 +1,144 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "common.proto";
+import "enum.proto";
+
+option csharp_namespace = "TT.Gateway.WebApi.Proto.Auth";
+
+package auth;
+
+service AuthService
+{
+    // Получение фразы для подписи (по адреса кошельку)
+    rpc GetSentence(GetSentenceRequest) returns (GetSentenceReply);
+    // Аунентификация/Регистрация по цифровой подписи кошелька
+    rpc AuthByWalletSign(AuthByWalletSignRequest) returns (AuthReply);
+    // Аунентификация/Регистрация по телеграм id
+    rpc AuthByTelegram(AuthByTelegramRequest) returns (AuthReply);
+    // Аунентификация/Регистрация по Seed фразе
+    rpc AuthBySeed(AuthBySeedRequest) returns (AuthReply);
+    // Подтверждение согласия новых Terms
+    rpc NewTermsAccepted(NewTermsAcceptedRequest) returns (common.EmptyReply);
+    // Подтверждение сохранения Seed
+    rpc SeedPhraseAccepted(SeedPhraseAcceptedRequest) returns (common.EmptyReply);
+    // Аунентификация по кратковременному токену
+    rpc AuthByCode(AuthByCodeRequest) returns (AuthReply);
+    // Функция обновления JWT токена для установления сессии
+    rpc RefreshAuthTokens(RefreshAuthTokensRequest) returns (AuthReply);
+    // Функция получения Short Life Code токена для установления сессии
+    rpc GetShortLifeCode(google.protobuf.Empty) returns (GetShortLifeCodeReply);
+}
+
+message GetSentenceRequest
+{
+    // Адрес кошелька
+    string walletAddress = 1;
+}
+
+message GetSentenceReply
+{
+    // Результат выполнения запроса
+    common.RequestResult result = 1;
+    // Сообщение для подписи
+    optional string sentence = 2;
+    // Время окончания активности сообщения для подписи
+    optional google.protobuf.Timestamp expire = 3;
+}
+
+message AuthByWalletSignRequest
+{
+    // Адрес кошелька
+    string walletAddress = 1;
+    // Подписанное сообщение
+    string signedSentence = 2;
+    // Тип блокчейна
+    enumeration.Chain chain = 3;
+    // Реферальный код (игнорировать, если аутентификация)
+    optional string referralCode = 4;
+    // MFA Code
+    optional string mfaCode = 5;
+    // Не регистрировать нового пользователя, если true
+    optional bool avoidRegistration = 6;
+}
+
+message AuthReply
+{
+    // Результат выполнения запроса
+    common.RequestResult result = 1;
+    // Если пользователем не были приняты Terms то строка не пустая
+    optional string newTerms = 2;
+    // Seed фраза выдается только в случае, если это новый пользователь
+    optional string seedPhrase = 3;
+    // JWT Token если аутентификация прошла успешно
+    optional common.AuthTokens token = 4;
+}
+
+message AuthByTelegramRequest
+{
+    // Ответ от телеграм логин
+    TelegramReply telegramReply = 1;
+    // Реферальный код (игнорировать, если аутентификация)
+    optional string referralCode = 2;
+    // MFA Code
+    optional string mfaCode = 3;
+    // Не регистрировать нового пользователя, если true
+    optional bool avoidRegistration = 4;
+}
+
+message AuthBySeedRequest
+{
+    //Seed фраза
+    string seedPhrase = 1;
+    // Реферальный код (игнорировать, если аутентификация)
+    optional string referralCode = 2;
+    // MFA Code
+    optional string mfaCode = 3;
+    // Ответ от телеграм логин
+    optional TelegramReply telegramReply = 4;
+    // Не регистрировать нового пользователя, если true
+    optional bool avoidRegistration = 5;
+}
+
+message NewTermsAcceptedRequest
+{
+    // Пользователь согласен с условиями пользовательского соглашения
+    bool isUserAgreementAccepted  = 1;
+}
+
+message SeedPhraseAcceptedRequest
+{
+    // Пользователь сохранил Seed-фразу
+    bool isSeedPhraseWasStored  = 1;
+}
+
+message AuthByCodeRequest
+{
+    // Кратковременный код
+    string shortLifeCode = 1;
+    // Ответ от телеграм логин
+    optional TelegramReply telegramReply = 2;
+    // Не регистрировать нового пользователя, если true
+    optional bool avoidRegistration = 3;
+}
+
+message RefreshAuthTokensRequest
+{
+    // Refresh Token
+    string refreshToken = 1;
+}
+
+message GetShortLifeCodeReply
+{
+    // Результат выполнения запроса
+    common.RequestResult result = 1;
+    // Код для переноса сессии
+    optional string shortLifeCode = 2;
+}
+
+// Ответ от Телеграм Login как он есть
+message TelegramReply
+{
+    map<string, string> telegramReply = 1;
+}

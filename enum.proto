@@ -1,0 +1,201 @@
+syntax = "proto3";
+
+option csharp_namespace = "TT.Gateway.WebApi.Proto";
+
+package enumeration;
+
+enum Chain
+{
+    Chain_Unknown = 0;
+    Chain_Solana = 1;
+    Chain_Ethereum = 2;
+}
+
+enum TimeUnit
+{
+    TimeUnit_Unknown = 0;
+    TimeUnit_Seconds = 1;
+    TimeUnit_Minutes = 2;
+    TimeUnit_Hours = 3;
+    TimeUnit_Days = 4;
+    TimeUnit_Weeks = 5;
+    TimeUnit_Months = 6;
+    TimeUnit_Years = 7;
+}
+
+enum Side
+{
+    Side_Unknown = 0;
+    Side_Buy = 1;
+    Side_Sell = 2;
+}
+
+enum OrderType
+{
+    OrderType_Unknown = 0;
+    OrderType_TakeProfit = 1;
+    OrderType_StopLoss = 2;
+}
+
+enum OrderSource
+{
+    OrderSource_Unknown = 0;
+    OrderSource_Terminal = 1;
+    OrderSource_Sniping = 2;
+    OrderSource_CopyTrading = 3;
+    OrderSource_AutoInvesting = 4;
+    OrderSource_QuickBuy = 5;
+}
+
+enum OrderTriggerType
+{
+    OrderTriggerType_Unknown = 0;
+    // Процент изменения рыночной капитализации от текущего значения
+    OrderTriggerType_MarketCapPct = 1;
+    // Процент изменения цены от текущего значения
+    OrderTriggerType_PricePct = 2;
+    // Абсолютное значение цены
+    OrderTriggerType_Price = 3;
+}
+
+enum OrderStatus
+{
+    OrderStatus_Unknown = 0;
+    OrderStatus_Filled = 1;
+    OrderStatus_Active = 2;
+    OrderStatus_Waiting = 3;
+    OrderStatus_Expired = 4;
+    OrderStatus_Canceled = 5;
+}
+
+enum AmountType
+{
+    AmountType_Unknown = 0;
+    AmountType_QuoteCurrency = 1;
+    AmountType_BaseCurrency = 2;
+    // Процент от открытой позиции
+    AmountType_PositionPct = 3;
+}
+
+enum DexVersion
+{
+    DexVersion_Unknown = 0;
+    DexVersion_UniswapV2 = 1;
+    DexVersion_UniswapV3 = 2;
+    DexVersion_UniswapV2_testnet = 3;
+    DexVersion_UniswapV3_testnet = 4;
+    DexVersion_Radium_mainnet = 5;
+    DexVersion_Radium_devnet = 6;
+}
+
+enum ReferralLevel
+{
+    ReferralLevel_Unknown = 0;
+    ReferralLevel_1 = 1;
+    ReferralLevel_2 = 2;
+    ReferralLevel_3 = 3;
+}
+
+enum TradePresetType
+{
+    TradePresetType_Unknown = 0;
+    TradePresetType_LimitBuy = 1;
+    TradePresetType_LimitSell = 2;
+    TradePresetType_SwapBuy = 3;
+    TradePresetType_SwapSell = 4;
+    TradePresetType_Approve = 5;
+    TradePresetType_Sniping = 6;
+    TradePresetType_CopyTrading = 7;
+    TradePresetType_AutoInvest = 8;
+    TradePresetType_QuickBuy = 9;
+}
+
+enum TransactionStatus
+{
+    TransactionStatus_Unknown = 0;
+    // Транзакция ожидает включения в блок
+    TransactionStatus_Pending = 1;
+    // Транзакция была включена в блок и подтверждена сетью
+    TransactionStatus_Confirmed = 2;
+    // Транзакция не удалась по какой-либо причине (например, недостаточно газа)
+    TransactionStatus_Failed = 3;
+    // Транзакция была удалена из мемпула и не будет включена в блок
+    TransactionStatus_Dropped = 4;
+    // Транзакция была включена в блок, но выполнение ее привело к отмене
+    TransactionStatus_Reverted = 5;
+    // Транзакция была заменена другой транзакцией с более высоким приоритетом
+    TransactionStatus_Replaced = 6;
+}
+
+enum TransactionType
+{
+    TransactionType_Unknown = 0;
+    TransactionType_Deposit = 1;
+    TransactionType_Withdrawal = 2;
+    TransactionType_Transfer = 3;
+    TransactionType_Airdrop = 4;
+    TransactionType_Tokenmint = 5;
+    TransactionType_Revokemint = 6;
+    TransactionType_Lpcreate = 7;
+    TransactionType_Liquidity = 8;
+    TransactionType_BlackList = 9;
+    TransactionType_Tax = 10;
+    TransactionType_BuySwap = 11;
+    TransactionType_SellSwap = 12;
+    TransactionType_Referral = 13;
+    TransactionType_Admin = 14;
+    TransactionType_Approve = 15;
+}
+
+enum AuthMethod
+{
+    AuthMethod_Unknown = 0;
+    AuthMethod_SolWallet = 1;
+    AuthMethod_EthWallet = 2;
+    AuthMethod_Telegram = 3;
+}
+
+enum NotificationType
+{
+    NotificationType_Unknown = 0;
+    NotificationType_System = 1;
+    NotificationType_Trade = 2;
+    NotificationType_Watchlist = 3;
+    NotificationType_Security = 4;
+}
+
+enum FileType
+{
+    FileType_Unknown = 0;
+    FileType_Csv = 1;
+    FileType_Excel = 2;
+}
+
+enum PriorityFeeMultiplier
+{
+    PriorityFeeMultiplier_Unknown = 0;
+    PriorityFeeMultiplier_1X = 1;
+    PriorityFeeMultiplier_2X = 2;
+    PriorityFeeMultiplier_3X = 3;
+}
+
+enum MarketsSort {
+    MarketsSort_Unknown = 0;
+    // По дате создания
+    MarketsSort_CreatedAt = 1;
+    // По количеству транзакций за последние 5 минут
+    MarketsSort_TxCountLast5M = 2;
+    // По количеству транзакций за последний 1 час
+    MarketsSort_TxCountLast1H = 3;
+    // По количеству транзакций за последние 6 часов
+    MarketsSort_TxCountLast6H = 4;
+    // По количеству транзакций за последние 24 часа
+    MarketsSort_TxCountLast24H = 5;
+}
+
+// Провайдер через который будут отправляться push-уведомления
+enum NotificationProvider {
+    NotificationProvider_Unknown = 0;
+
+    NotificationProvider_Firebase = 1;
+}

@@ -1,0 +1,317 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+import "enum.proto";
+
+option csharp_namespace = "TT.Gateway.WebApi.Proto";
+
+package common;
+
+// Общий формат сообщения-запроса для инкапсулирования данных
+message GeneralRequest
+{
+    // Произвольный идентификатор запроса (будет возвращен в ответе)
+    // Должен быть уникальным в рамках одного wss-соединения на время жизни
+    // соединения
+    string requestId = 1;
+    // Тело запроса
+    // Для отписки от стрима передаётся сообщение UnsubscribeRequest
+    google.protobuf.Any message = 2;
+    // Имя запроса в формате Service/RpcName
+    // Не передаётся, например, для закрытия стрима
+    optional string method = 3;
+    // JWT токен для unary запросов и подписок
+    optional string authorization = 4;
+}
+
+// Общий формат сообщения-события/ответа для инкапсулирования данных
+message GeneralReply    
+{
+    // Идентификатор, который был передан в запросе
+    // Для всех сообщений стрима будет одинаковый (который был передан при
+    // подписке)
+    string requestId = 1;
+    // Тело ответа
+    // Сообщение отписки от стрима имеет тело ErrorDescription
+    google.protobuf.Any message = 2;
+}
+
+// Сообщение, которое передаёт клиент для отписки от стрима
+message UnsubscribeRequest    
+{
+    // Всегда true
+    bool unsubscribe = 1;
+}
+
+message RequestResult    
+{
+    // Статус успешного выполнения
+    bool isSuccess = 1;
+    // Список ошибок. Будет заполнен только для неуспешных запросов
+    // Не обязательно присутствует, если запрос неуспешный
+    repeated ErrorDescription errors = 2;
+    // Номер ошибки для передачи в службу поддержки
+    optional string errorTrace = 3;
+}
+
+message EmptyReply    
+{
+    // Результат выполнения запроса
+    RequestResult result = 1;
+}
+
+// Описание ошибки
+message ErrorDescription    
+{
+    // Код ошибки
+    uint32 code = 1;
+    // Текст ошибки на английском языке
+    string message = 2;
+    // Детали ошибки на английском языке
+    string details = 3;
+    // Локализация текста ошибки
+    repeated LocalizedText localizedText = 4;
+}
+
+// Пагинация
+message PagingRequest    
+{
+    optional uint32 offset = 1;
+    optional uint32 limit = 2;
+    // Последний известный ID для пагинации
+    optional string lastKnownId = 3;
+}
+
+// Пагинация
+message KeyPagingRequest    
+{
+    optional uint32 limit = 1;
+    optional string continuationToken = 2;
+}
+
+
+// Текст с указанием локали
+message LocalizedText    
+{
+    string locale = 1;
+    string text = 2;
+}
+
+message TimeInterval    
+{
+    // Числовое значение временного интервала
+    optional int64 value = 1;
+    // Единица измерения времени
+    enumeration.TimeUnit unit = 2;
+}
+
+message AuthTokens    
+{
+    string accessToken = 1;
+    string refreshToken = 2;
+}
+
+// Тип данных, описывающий настройки транзакции (например, газ, проскальзывание)
+message TransactionSettings    
+{
+    // Защита от сендвич атак
+    optional bool antiMev = 1;
+    // Пре аппрув токенов
+    optional bool preApprove = 2;
+    // Авто-аппрув токенов после их получения
+    optional bool autoApprove = 3;
+    // Опция мониторинга токена на предмет скама
+    optional bool antiRug = 4;
+    // Лимит газа
+    optional Decimals gasLimit = 5;
+    // Комиссия за приоритет
+    optional PriorityFee priorityFee = 6;
+    // Взятка валидатору
+    optional Decimals briberyAmount = 7;
+    // Проскальзывание
+    optional Decimals slippage = 8;
+    // Срок экспирации ордера
+    optional TimeInterval expiration = 9;
+    // Перевод токенов при внесении адреса пользователя в черный список
+    optional bool transferOnBlacklist = 10;
+    // First Bundle or Fail настройка
+    optional bool fof = 11;
+}
+
+message PriorityFee    
+{
+    oneof priorityFee {
+        Decimals fixed = 1;
+        enumeration.PriorityFeeMultiplier multiplier = 2;
+    }
+}
+
+message AnalyticsReply    
+{
+    oneof analytics {
+        AnalyticsSol analyticsSol = 1;
+        AnalyticsEth analyticsEth = 2;
+    }
+}
+
+message AnalyticsEth    
+{
+    // Налог, взимаемый разработчиком при покупке, в результате чего вы получаете
+    // меньше токенов
+    optional Decimals buyTax = 1;
+    // Налог, взимаемый разработчиком при продаже, в результате чего вы получаете
+    // меньше токенов
+    optional Decimals sellTax = 2;
+    // Налог, взимаемый разработчиком при переводе, в результате чего вы получаете
+    // меньше токенов
+    optional Decimals transferTax = 3;
+    // Процент токенов, которые холдятся на контракте токена
+    optional Decimals clog = 4;
+    // Холдеры токенов могут покупать, но не продавать токены
+    optional bool honeypot = 5;
+    // % токенов от общей эмиссий, заблокированных на определенное время
+    Decimals lockedLiquidity = 6;
+    // % сожженых токенов ликвидности
+    optional Decimals burnedLiquidity = 7;
+    // Число холдеров токенов
+    optional int64 holders = 8;
+    // Максимальная сумма покупки на адрес кошелька в нативной криптовалюте
+    optional Decimals maxBuy = 9;
+    // Максимальная сумма продажи на адрес кошелька в нативной криптовалюте
+    optional Decimals maxSell = 10;
+    // Как много адресов не могут продать токены
+    optional int64 cantSell = 11;
+    // Есть ли лимит транзакций на продажу в рамках одного блока
+    optional bool sellLimit = 12;
+    // Адрес кошелька разработчика токена
+    optional string deployerWallet = 13;
+    // % токенов от общей эмиссии, находящиеся на кошельке разработчика
+    optional Decimals deployerHoldings = 14;
+    // Время создания пула ликвидности
+    optional google.protobuf.Timestamp createdAt = 15;
+    // Контракт находится в Open Source
+    optional bool verifiedContract = 16;
+    // Владелец контракта больше не может вносить изменения в контракт токена
+    optional bool renounced = 17;
+    // Не является прокси-контрактом
+    optional bool notProxyContract = 18;
+    // Адрес кошелька владельца контракта
+    optional string ownerWallet = 19;
+    // Лимит на продажу токенов в рамках блока
+    optional bool sellLimitPerBlock = 20;
+    // % токенов от общей эмиссии, которые находятся среди топ 10 холдеров
+    optional Decimals topHolders = 21;
+    // % токенов от общей эмиссии, которые находятся на адресе кошелька владельца
+    // токена
+    optional Decimals creatorHoldings = 22;
+}
+
+message AnalyticsSol    
+{
+    // % сожженых токенов ликвидности
+    optional Decimals burnedLiquidity = 1;
+    // Количество нативной криптовалюты в пуле ликвидности
+    optional Decimals pooledCrypto = 2;
+    // Количество токенов в пуле ликвидности
+    optional Decimals pooledTokens = 3;
+    // Возможность выпускать новые токены
+    optional bool mintAuthority = 4;
+    // Возможность замораживать токен аккаунты
+    optional bool freezeAuthority = 5;
+    // Число холдеров токенов
+    optional int64 holders = 6;
+    // Адрес кошелька разработчика токена
+    optional string deployerWallet = 7;
+    // % токенов от общей эмиссии, находящиеся на кошельке разработчика
+    optional Decimals deployerHoldings = 8;
+    // Время создания пула ликвидности
+    optional google.protobuf.Timestamp createdAt = 9;
+    // Владелец контракта больше не может вносить изменения в контракт токена
+    optional bool renounced = 10;
+    // % токенов от общей эмиссии, которые находятся среди топ 10 холдеров
+    optional Decimals topHolders = 11;
+}
+
+message Tokenomics    
+{
+    // Цена токена в нативной криптовалюте
+    optional Decimals priceInCrypto = 1;
+    // Текущая ликвидность в нативной криптовалюте
+    optional Decimals liquidityCrypto = 2;
+    // Начальная ликвидность в нативной криптовалюте
+    optional Decimals initialLiquidityCrypto = 3;
+    // Рыночная капитализация в долларах
+    optional Decimals mktCap = 4;
+    // Количество транзакций по данному пулу ликвидности
+    optional uint32 txns = 5;
+    // Торговый объем в долларах
+    optional Decimals volume = 6;
+}
+
+message AuditReply    
+{
+    oneof audit {
+        AuditSol auditSol = 1;
+        AuditEth auditEth = 2;
+    }
+}
+
+message AuditSol    
+{
+    // Возможность выпускать новые токены
+    bool mintAuthority = 1;
+    // Возможность замораживать токен аккаунты
+    bool freezeAuthority = 2;
+    // % токенов ликвидности, который был сожжен
+    Decimals lpBurned = 3;
+    // % токенов от общей эмиссии, которые находятся среди топ 10 холдеров
+    Decimals topHolders = 4;
+}
+
+message AuditEth    
+{
+    // Контракт находится в Open Source
+    bool verifiedContract = 1;
+    // Владелец контракта больше не может вносить изменения в контракт токена
+    bool renounced = 2;
+    // Холдеры токенов могут покупать, но не продавать токены
+    bool honeypot = 3;
+    // % токенов от общей эмиссий, заблокированных на определенное время
+    Decimals lockedLiquidity = 4;
+}
+
+message Order    
+{
+    // ID ордера (используется для ответов)
+    optional string orderId = 1;
+    // Сумма ордера
+    Decimals amount = 2;
+    // Единица измерения суммы ордера
+    enumeration.AmountType amountType = 3;
+    // Направление обмена
+    enumeration.Side side = 4;
+    // Тип ордера (не влияет на сам ордер, используется как лэйбл)
+    optional enumeration.OrderType type = 5;
+    // Триггер (используется для лимитных ордеров)
+    // Если отсутствует, то ордер должен быть исполнен сразу (Swap)
+    optional OrderTrigger trigger = 6;
+    // Настройки транзакции
+    TransactionSettings settings = 7;
+    // Статус ордера (используется для ответов)
+    optional enumeration.OrderStatus status = 8;
+}
+
+message OrderTrigger    
+{
+    // Тип триггера лимитного ордера
+    enumeration.OrderTriggerType type = 1;
+    // Целевое значение
+    Decimals value = 2;
+}
+
+message Decimals    
+{
+    int64 value = 1; 
+    sint32 exp = 2; 
+}

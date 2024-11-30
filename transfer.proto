@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+import "enum.proto";
+
+option csharp_namespace = "TT.Gateway.WebApi.Proto.Transfer";
+
+package transfer;
+
+service TransferService
+{
+    // Получить историю вводов, выводов, переводов пользователя
+    rpc GetTransfers(GetTransfersRequest) returns (GetTransfersReply);
+    // Подписка на обновление истории транзакций пользователя
+    rpc GetTransfersStream(GetTransfersRequest) returns (stream GetTransfersReply);
+    // Экспорт истории транзакций пользователя
+    rpc ExportTransfers(ExportTransfersRequest) returns (ExportTransfersReply);
+    // Скрытие транзакции пользователя
+    rpc HideTransfers(HideTransfersRequest) returns (common.EmptyReply);
+    // Запрос на перевод средств
+    rpc Transfer(TransferRequest) returns (TransferReply);
+}
+
+message GetTransfersRequest
+{
+    enumeration.Chain chain = 1;
+    // Фильтр по типу транзакции, по умолчанию все
+    repeated enumeration.TransactionType type = 2;
+    // Фильтр по статусу транзакции, по умолчанию все
+    repeated enumeration.TransactionStatus status = 3;
+    // Фильтр по скрытости трансфера, по умолчанию false
+    optional bool isHidden = 4;
+    optional common.PagingRequest paging = 5;
+}
+
+message GetTransfersReply
+{
+    common.RequestResult result = 1;
+    repeated GetTransfersReplyItem transfers = 2;
+    // Список хешей трансферов, которые нужно удалить из списка
+    // Используется для стримов, когда трансфер вышел из фильтров
+    repeated string toRemove = 3;
+}
+
+message GetTransfersReplyItem
+{
+    // Хеш транзакции, является идентификатором
+    string hash = 1;
+    // Дата и время создания трансфера
+    google.protobuf.Timestamp createdAt = 2;
+    // Тип транзакции (возможны TransactionType_Deposit,
+    // TransactionType_Withdrawal, TransactionType_Transfer)
+    enumeration.TransactionType type = 3;
+    // Статус транзакции
+    enumeration.TransactionStatus status = 4;
+    // Адрес, с которого осуществляется вывод
+    optional string withdrawAddress = 5;
+    // Адрес получения средств
+    optional string depositAddress = 6;
+    // Сумма трансфера
+    common.Decimals amount = 7;
+    // Сумма затраченного газа
+    optional common.Decimals fee = 8;
+    // Скрыт ли трансфер
+    optional bool isHidden = 9;
+}
+
+message ExportTransfersRequest
+{
+    enumeration.Chain chain = 1;
+    // Фильтр по типу транзакции, по умолчанию все
+    repeated enumeration.TransactionType type = 2;
+    // Фильтр по статусу транзакции, по умолчанию все
+    repeated enumeration.TransactionStatus status = 3;
+    // Фильтр по скрытости трансфера, по умолчанию false
+    optional bool isHidden = 4;
+    // Фильтр по дате создания трансфера "От"
+    optional google.protobuf.Timestamp createdAtFrom = 5;
+    // Фильтр по дате создания трансфера "До"
+    optional google.protobuf.Timestamp createdAtTo = 6;
+    // Тип файла для экспорта трансферов
+    enumeration.FileType export = 7;
+}
+
+message ExportTransfersReply
+{
+    common.RequestResult result = 1;
+    // Ссылка на файл с трансферами
+    optional string file = 2;
+}
+
+message HideTransfersRequest
+{
+    enumeration.Chain chain = 1;
+    repeated string hash = 2;
+    bool isHidden = 3;
+}
+
+message TransferRequest
+{
+    // Количество нативной валюты
+    common.Decimals amount = 1;
+    // Адрес, с которого осуществляется вывод
+    string withdrawAddress = 2;
+    // Адрес получения средств
+    string depositAddress = 3;
+    enumeration.Chain chain = 4;
+    // Адрес токена
+    optional string tokenAddress = 5;
+}
+
+message TransferReply
+{
+    common.RequestResult result = 1;
+    // Транзакции переводов
+    repeated string hash = 2;
+}
